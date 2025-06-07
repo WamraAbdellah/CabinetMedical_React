@@ -1,0 +1,47 @@
+## run dbs instances in docker containers better isolation
+services:
+  mongodb:
+    image: mongo:8.0.9
+    container_name: mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: teamcheese
+
+  mongo-express:
+    image: mongo-express:latest
+    container_name: mongo-express
+    ports:
+      - "8081:8081"
+    environment:
+      ME_CONFIG_MONGODB_URL: "mongodb://root:teamcheese@mongodb:27017/?authSource=admin"
+    depends_on:
+      - mongodb
+    restart: unless-stopped
+
+  neo4j:
+    image: neo4j:5.26.7-enterprise
+    container_name: neo4j
+    ports:
+      - "7687:7687"
+      - "7474:7474"
+    environment:
+      NEO4J_ACCEPT_LICENSE_AGREEMENT: "yes"
+      NEO4J_AUTH: "neo4j/teamcheese"            # put here your username/password as you wish
+      NEO4J_dbms_default__database: "cabinetdb"
+      NEO4J_dbms_connector_bolt_enabled: "true"
+      NEO4J_dbms_connector_http_enabled: "true"
+      NEO4J_dbms_connector_https_enabled: "false"
+    volumes:
+      - neo4j_data:/data
+      - neo4j_logs:/logs
+    restart: unless-stopped
+
+volumes:
+  mongo_data:
+  neo4j_data:
+  neo4j_logs:

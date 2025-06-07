@@ -1,0 +1,29 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+model/
+# Environment variables
+.env
+.run
+# Dependency files
+*.egg-info/
+dist/
+build/
+
+# Virtual environment
+venv/
+env/
+ENV/
+
+# VS Code
+.vscode/
+
+#JEtBrains
+.idea/
+
+# Mac/Linux hidden files
+.DS_Store
+
+# Windows hidden files
+Thumbs.db
+../.idea
