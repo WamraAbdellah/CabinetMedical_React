@@ -82,7 +82,7 @@ export default function AdminPatients() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
-    setEditedPatient(prev => ({
+    setEditedPatient((prev:Record<string, any>) => ({
       ...prev,
       [name]: value
     }))

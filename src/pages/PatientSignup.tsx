@@ -170,7 +170,7 @@ export default function PatientSignup() {
                         <Phone className="h-5 w-5 text-medical-400" />
                       </div>
                       <input
-                        {...register('tel')}
+                        {...register('tel',{required: 'Le num de telephone est requis'})}
                         type="tel"
                         className="input-field pl-10"
                         placeholder="+33 1 23 45 67 89"
@@ -204,7 +204,7 @@ export default function PatientSignup() {
             {/* Informations médicales */}
             <div>
               <h3 className="text-lg font-medium text-medical-900 mb-4">
-                Informations médicales (optionnel)
+                Informations médicales 
               </h3>
               
               <div className="space-y-4">
@@ -221,6 +221,7 @@ export default function PatientSignup() {
                       type="text"
                       className="input-field pl-10"
                       placeholder="Ex: Diabète, Hypertension, Asthme..."
+                      required
                     />
                   </div>
                 </div>
@@ -233,6 +234,7 @@ export default function PatientSignup() {
                     {...register('description_maladie')}
                     className="input-field"
                     rows={3}
+                    required
                     placeholder="Décrivez votre condition médicale, symptômes, traitements en cours..."
                   />
                 </div>

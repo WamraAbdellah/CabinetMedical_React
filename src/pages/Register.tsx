@@ -1,12 +1,11 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
-import { doctorAPI } from '../services/api'
+import { doctorAPI, patientAPI, adminAPI } from '../services/api'
 import toast from 'react-hot-toast'
-import { Activity, User, Mail, Lock, Phone, Stethoscope, Calendar } from 'lucide-react'
+import { Activity, User, Mail, Lock, Phone, Stethoscope } from 'lucide-react'
 import PhoneInput from 'react-phone-number-input'
 import 'react-phone-number-input/style.css'
-
 
 interface RegisterForm {
   nom: string
@@ -16,7 +15,6 @@ interface RegisterForm {
   confirmPassword: string
   specialite: string
   tel: string
-
 }
 
 const specialites = [
@@ -54,22 +52,11 @@ const specialites = [
   'Médecin rééducateur'
 ]
 
-const calculateAge = (birthDate: string): number => {
-  const birth = new Date(birthDate)
-  const today = new Date()
-  let age = today.getFullYear() - birth.getFullYear()
-  const monthDiff = today.getMonth() - birth.getMonth()
-  
-  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
-    age--
-  }
-  
-  return age
-}
-
 export default function Register() {
   const navigate = useNavigate()
   const [isLoading, setIsLoading] = useState(false)
+  const [isEmailChecking, setIsEmailChecking] = useState(false)
+  const [emailAvailable, setEmailAvailable] = useState(true)
   const [phone, setPhone] = useState('')
   
   const {
@@ -78,9 +65,49 @@ export default function Register() {
     watch,
     formState: { errors },
     setValue,
+    trigger,
   } = useForm<RegisterForm>()
 
+  const email = watch('email')
   const password = watch('mot_de_passe')
+
+  // Vérification de la disponibilité de l'email
+  useEffect(() => {
+    const checkEmailAvailability = async () => {
+      if (email && !errors.email) {
+        setIsEmailChecking(true)
+        try {
+          // Vérifier dans les trois collections
+          const [doctorsRes, patientsRes, pendingRes] = await Promise.all([
+            doctorAPI.list(),
+            patientAPI.list(),
+            adminAPI.getPendingDoctors()
+          ])
+          
+         console.log(pendingRes)
+
+          const allEmails = [
+            ...doctorsRes.data.doctors.map((d: any) => d.email),
+            ...patientsRes.data.patients.map((p: any) => p.email),
+            ...pendingRes.data.map((p: any) => p.email)
+          ]
+          
+          setEmailAvailable(!allEmails.includes(email))
+        } catch (error) {
+          console.error("Erreur lors de la vérification de l'email", error)
+          setEmailAvailable(true)
+        } finally {
+          setIsEmailChecking(false)
+        }
+      }
+    }
+    
+    const timer = setTimeout(() => {
+      if (email) checkEmailAvailability()
+    }, 500)
+    
+    return () => clearTimeout(timer)
+  }, [email, errors.email])
 
   const onSubmit = async (data: RegisterForm) => {
     if (data.mot_de_passe !== data.confirmPassword) {
@@ -88,6 +115,10 @@ export default function Register() {
       return
     }
 
+    if (!emailAvailable) {
+      toast.error('Cet email est déjà utilisé')
+      return
+    }
 
     setIsLoading(true)
     try {
@@ -162,7 +193,6 @@ export default function Register() {
               </div>
             </div>
 
-
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Adresse email
@@ -184,57 +214,64 @@ export default function Register() {
                   placeholder="votre@email.com"
                 />
               </div>
+              {email && !errors.email && (
+                <div className="mt-1 text-sm">
+                  {isEmailChecking ? (
+                    <span className="text-gray-500">Vérification de l'email...</span>
+                  ) : !emailAvailable ? (
+                    <span className="text-red-600">Cet email est déjà utilisé</span>
+                  ) : (
+                    <span className="text-green-600">Email disponible</span>
+                  )}
+                </div>
+              )}
               {errors.email && (
                 <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>
               )}
             </div>
 
-        
-<div className="mb-4">
-  <label className="block text-sm font-medium text-gray-700 mb-2">
-    Téléphone
-  </label>
-  <div className="relative">
-    {/* Phone icon (absolute positioned) */}
-    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10">
-      <Phone className="h-5 w-5 text-gray-400" />
-    </div>
-    
-    {/* PhoneInput with enhanced styling */}
-    <PhoneInput
-      international
-      defaultCountry="FR"
-      value={phone}
-      onChange={(value) => {
-        setPhone(value || '')
-        setValue('tel', value || '')
-      }}
-      className={`
-        block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm
-        placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
-        sm:text-sm bg-white text-gray-900
-        transition duration-150 ease-in-out
-      `}
-      style={{
-        '--PhoneInputCountryFlag-height': '1.2em',
-        '--PhoneInputCountryFlag-borderColor': 'rgba(0,0,0,0.1)',
-        '--PhoneInput-color--focus': '#3b82f6',
-      } as React.CSSProperties}
-    />
-    
-    {/* Hidden input for react-hook-form */}
-    <input
-      {...register('tel', { 
-        required: 'Le téléphone est requis',
-        validate: (value) => phone?.length > 5 || 'Numéro de téléphone invalide'
-      })}
-      type="hidden"
-    />
-  </div>
-  {errors.tel && (
-    <p className="mt-1 text-sm text-red-600">{errors.tel.message}</p>
-  )}
-</div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Téléphone
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10">
+                  <Phone className="h-5 w-5 text-gray-400" />
+                </div>
+                
+                <PhoneInput
+                  international
+                  defaultCountry="FR"
+                  value={phone}
+                  onChange={(value) => {
+                    setPhone(value || '')
+                    setValue('tel', value || '')
+                  }}
+                  className={`
+                    block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm
+                    placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+                    sm:text-sm bg-white text-gray-900
+                    transition duration-150 ease-in-out
+                  `}
+                  style={{
+                    '--PhoneInputCountryFlag-height': '1.2em',
+                    '--PhoneInputCountryFlag-borderColor': 'rgba(0,0,0,0.1)',
+                    '--PhoneInput-color--focus': '#3b82f6',
+                  } as React.CSSProperties}
+                />
+                
+                <input
+                  {...register('tel', { 
+                    required: 'Le téléphone est requis',
+                    validate: (value) => phone?.length > 5 || 'Numéro de téléphone invalide'
+                  })}
+                  type="hidden"
+                />
+              </div>
+              {errors.tel && (
+                <p className="mt-1 text-sm text-red-600">{errors.tel.message}</p>
+              )}
+            </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -313,7 +350,7 @@ export default function Register() {
 
             <button
               type="submit"
-              disabled={isLoading}
+              disabled={isLoading || !emailAvailable}
               className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? (

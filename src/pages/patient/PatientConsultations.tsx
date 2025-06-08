@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
-import { patientAPI, doctorAPI } from '../../services/api'
+import { patientAPI, doctorAPI,adminAPI } from '../../services/api'
 import { Calendar, Clock, User, Plus, FileText } from 'lucide-react'
 import { format } from 'date-fns'
 import { fr } from 'date-fns/locale'
@@ -8,8 +8,8 @@ import toast from 'react-hot-toast'
 
 export default function PatientConsultations() {
   const { user } = useAuth()
-  const [consultations, setConsultations] = useState([])
-  const [doctors, setDoctors] = useState([])
+  const [consultations, setConsultations] = useState<any[]>([])
+  const [doctors, setDoctors] = useState<any>([])
   const [loading, setLoading] = useState(true)
   const [showNewConsultation, setShowNewConsultation] = useState(false)
   const [newConsultation, setNewConsultation] = useState({
@@ -30,11 +30,11 @@ export default function PatientConsultations() {
       
       const [consultationsRes, doctorsRes] = await Promise.all([
         patientAPI.getConsultations(user._id),
-        doctorAPI.list()
+        adminAPI.getAllDoctors()
       ])
-      
+      console.log(doctorsRes)
       setConsultations(consultationsRes.data.consultations || [])
-      setDoctors(doctorsRes.data.doctors || [])
+      setDoctors(doctorsRes.data|| [])
       
     } catch (error: any) {
       toast.error('Erreur lors du chargement des consultations')
@@ -223,7 +223,7 @@ export default function PatientConsultations() {
                     <div className="flex items-center space-x-4 text-sm text-medical-600">
                       <div className="flex items-center space-x-1">
                         <Calendar className="h-4 w-4" />
-                        <span>{consultation.date}</span>
+                        <span>{consultation.date_str}</span>
                       </div>
                     </div>
                     

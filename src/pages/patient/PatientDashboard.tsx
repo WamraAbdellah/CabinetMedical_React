@@ -6,8 +6,8 @@ import toast from 'react-hot-toast'
 
 export default function PatientDashboard() {
   const { user } = useAuth()
-  const [consultations, setConsultations] = useState([])
-  const [doctor, setDoctor] = useState(null)
+  const [consultations, setConsultations] = useState<any[]>([])
+  const [doctor, setDoctor] = useState<any>(null)
   const [doctors, setDoctors] = useState([])
   const [loading, setLoading] = useState(true)
   const [showNewConsultation, setShowNewConsultation] = useState(false)
@@ -32,13 +32,18 @@ export default function PatientDashboard() {
       setConsultations(consultationsRes.data.consultations || [])
       
       // Load assigned doctor
-      try {
-        const doctorRes = await patientAPI.getDoctor(user._id)
-        setDoctor(doctorRes.data)
-      } catch (error) {
-        // No doctor assigned yet
-        setDoctor(null)
-      }
+     try {
+  const doctorRes = await patientAPI.getDoctor(user._id)
+  // Vérifiez si la réponse contient un message "Aucun docteur assigné"
+  if (doctorRes.data.message && doctorRes.data.message === "Aucun docteur assigné") {
+    setDoctor(null)
+  } else {
+    setDoctor(doctorRes.data)
+  }
+} catch (error) {
+  // En cas d'erreur autre que 200 (au cas où)
+  setDoctor(null)
+}
       
       // Load all doctors for consultation booking
       const doctorsRes = await doctorAPI.list()

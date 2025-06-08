@@ -124,7 +124,7 @@ export default function AdminDoctors() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target
-    setEditedDoctor(prev => ({
+    setEditedDoctor((prev:Record<string, any>) => ({
       ...prev,
       [name]: value
     }))

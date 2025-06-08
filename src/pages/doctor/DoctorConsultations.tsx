@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
-import { doctorAPI } from '../../services/api'
+import { doctorAPI, patientAPI } from '../../services/api'
 import { Calendar, Clock, CheckCircle, XCircle, Filter } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 export default function DoctorConsultations() {
   const { user } = useAuth()
-  const [consultations, setConsultations] = useState([])
+  const [consultations, setConsultations] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState('all')
 
@@ -20,9 +20,33 @@ export default function DoctorConsultations() {
     try {
       setLoading(true)
       const response = await doctorAPI.getConsultations(user._id)
-      setConsultations(response.data.consultations || [])
+      
+      // Charger les informations des patients pour chaque consultation
+      const consultationsWithPatientInfo = await Promise.all(
+        response.data.consultations.map(async (consultation: any) => {
+          try {
+            const patientResponse = await patientAPI.get(consultation.patient_id)
+            console.log(patientResponse)
+            return {
+              ...consultation,
+              patient_name: `${patientResponse.data.nom} ${patientResponse.data.prenom}`,
+              maladie: patientResponse.data.maladie || 'Non spécifiée'
+            }
+          } catch (error) {
+            console.error("Erreur lors du chargement des informations du patient:", error)
+            return {
+              ...consultation,
+              patient_name: 'Patient inconnu',
+              maladie: 'Non spécifiée'
+            }
+          }
+        })
+      )
+      
+      setConsultations(consultationsWithPatientInfo)
     } catch (error: any) {
       toast.error('Erreur lors du chargement des consultations')
+      console.error(error)
     } finally {
       setLoading(false)
     }
@@ -40,7 +64,7 @@ export default function DoctorConsultations() {
         toast.success('Consultation rejetée')
       }
       
-      loadConsultations() // Reload data
+      loadConsultations() // Recharger les données
     } catch (error: any) {
       const message = error.response?.data?.error || 'Erreur lors de l\'action'
       toast.error(message)
@@ -230,22 +254,27 @@ export default function DoctorConsultations() {
                   <div className="flex-1">
                     <div className="flex items-center space-x-4 mb-2">
                       <h4 className="font-medium text-medical-900">
-                        Patient ID: {consultation.patient_id}
+                        {consultation.patient_name}
                       </h4>
                       <span className={`status-badge ${getStatusColor(consultation.etat)}`}>
                         {getStatusText(consultation.etat)}
                       </span>
                     </div>
                     
-                    <div className="flex items-center space-x-4 text-sm text-medical-600 mb-2">
+                    <div className="flex flex-col space-y-2 text-sm text-medical-600 mb-2">
                       <div className="flex items-center space-x-1">
                         <Calendar className="h-4 w-4" />
-                        <span>{consultation.date}</span>
+                        <span>{consultation.date_str}</span>
+                      </div>
+                      <div>
+                        <span className="font-medium">Maladie: </span>
+                        <span>{consultation.maladie}</span>
                       </div>
                     </div>
                     
                     {consultation.description && (
                       <p className="text-sm text-medical-700 mb-3">
+                        <span className="font-medium">Motif: </span>
                         {consultation.description}
                       </p>
                     )}
