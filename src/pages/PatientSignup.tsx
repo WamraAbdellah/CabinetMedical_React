@@ -30,6 +30,19 @@ export default function PatientSignup() {
     formState: { errors },
   } = useForm<PatientSignupForm>()
 
+  const validateAge = (dateString: string) => {
+  const birthDate = new Date(dateString)
+  const today = new Date()
+  let age = today.getFullYear() - birthDate.getFullYear()
+  const monthDiff = today.getMonth() - birthDate.getMonth()
+  
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+    age--
+  }
+  
+  return age >= 15 || 'Vous devez avoir au moins 15 ans pour vous inscrire'
+}
+
   const password = watch('mot_de_passe')
 
   const onSubmit = async (data: PatientSignupForm) => {
@@ -174,7 +187,7 @@ export default function PatientSignup() {
                         <Calendar className="h-5 w-5 text-medical-400" />
                       </div>
                       <input
-                        {...register('date_naissance', { required: 'La date de naissance est requise' })}
+                        {...register('date_naissance', { required: 'La date de naissance est requise' ,validate: validateAge})}
                         type="date"
                         className="input-field pl-10"
                         max={new Date().toISOString().split('T')[0]}
