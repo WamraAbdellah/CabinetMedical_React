@@ -119,16 +119,30 @@ export default function Login() {
             </button>
           </form>
 
-          <div className="mt-6 text-center">
-            <p className="text-sm text-medical-600">
-              Vous êtes médecin et n'avez pas de compte ?{' '}
+          <div className="mt-6 space-y-4">
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-medical-300" />
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-2 bg-white text-medical-500">Pas encore de compte ?</span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 gap-3">
               <Link
-                to="/register"
-                className="font-medium text-primary-600 hover:text-primary-500 transition-colors"
+                to="/register/patient"
+                className="w-full btn-secondary text-center"
               >
-                Demander un accès
+                S'inscrire comme patient
               </Link>
-            </p>
+              <Link
+                to="/register/doctor"
+                className="w-full btn-secondary text-center"
+              >
+                Demander un accès médecin
+              </Link>
+            </div>
           </div>
         </div>
 

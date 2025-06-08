@@ -6,6 +6,7 @@ import { useAuth } from './contexts/AuthContext'
 import Layout from './components/Layout'
 import Login from './pages/Login'
 import Register from './pages/Register'
+import PatientSignup from './pages/PatientSignup'
 import Dashboard from './pages/Dashboard'
 import PatientDashboard from './pages/patient/PatientDashboard'
 import DoctorDashboard from './pages/doctor/DoctorDashboard'
@@ -47,7 +48,8 @@ function AppRoutes() {
   return (
     <Routes>
       <Route path="/login" element={user ? <Navigate to="/dashboard\" replace /> : <Login />} />
-      <Route path="/register" element={user ? <Navigate to="/dashboard\" replace /> : <Register />} />
+      <Route path="/register/doctor" element={user ? <Navigate to="/dashboard\" replace /> : <Register />} />
+      <Route path="/register/patient" element={user ? <Navigate to="/dashboard\" replace /> : <PatientSignup />} />
       
       <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
         <Route index element={<Navigate to="/dashboard\" replace />} />
