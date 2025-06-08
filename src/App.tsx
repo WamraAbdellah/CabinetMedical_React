@@ -19,6 +19,7 @@ import AdminPatients from './pages/admin/AdminPatients'
 import AdminDoctors from './pages/admin/AdminDoctors'
 import AdminPendingDoctors from './pages/admin/AdminPendingDoctors'
 
+
 function ProtectedRoute({ children, allowedRoles }: { children: React.ReactNode, allowedRoles?: string[] }) {
   const { user, loading } = useAuth()
 

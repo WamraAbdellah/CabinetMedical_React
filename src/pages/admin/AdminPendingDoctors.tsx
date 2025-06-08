@@ -122,7 +122,7 @@ export default function AdminPendingDoctors() {
                           En attente
                         </span>
                         <span className="text-sm text-medical-500">
-                          {new Date(doctor.created_at).toLocaleDateString()}
+                          {new Date(doctor.created_at.$date).toLocaleDateString()}
                         </span>
                       </div>
                     </div>
