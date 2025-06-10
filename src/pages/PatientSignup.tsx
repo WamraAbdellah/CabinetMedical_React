@@ -4,6 +4,8 @@ import { useForm } from 'react-hook-form'
 import { patientAPI } from '../services/api'
 import toast from 'react-hot-toast'
 import { Activity, User, Mail, Lock, Phone, Calendar, FileText, Eye, EyeOff } from 'lucide-react'
+import PhoneInput from 'react-phone-number-input'
+import 'react-phone-number-input/style.css'
 
 interface PatientSignupForm {
   nom: string
@@ -22,26 +24,28 @@ export default function PatientSignup() {
   const [isLoading, setIsLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [phone, setPhone] = useState<string>('') // Add phone state
   
   const {
     register,
     handleSubmit,
     watch,
+    setValue, // Add setValue from useForm
     formState: { errors },
   } = useForm<PatientSignupForm>()
 
   const validateAge = (dateString: string) => {
-  const birthDate = new Date(dateString)
-  const today = new Date()
-  let age = today.getFullYear() - birthDate.getFullYear()
-  const monthDiff = today.getMonth() - birthDate.getMonth()
-  
-  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-    age--
+    const birthDate = new Date(dateString)
+    const today = new Date()
+    let age = today.getFullYear() - birthDate.getFullYear()
+    const monthDiff = today.getMonth() - birthDate.getMonth()
+    
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--
+    }
+    
+    return age >= 15 || 'Vous devez avoir au moins 15 ans pour vous inscrire'
   }
-  
-  return age >= 15 || 'Vous devez avoir au moins 15 ans pour vous inscrire'
-}
 
   const password = watch('mot_de_passe')
 
@@ -169,13 +173,37 @@ export default function PatientSignup() {
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                         <Phone className="h-5 w-5 text-medical-400" />
                       </div>
-                      <input
-                        {...register('tel',{required: 'Le num de telephone est requis'})}
-                        type="tel"
-                        className="input-field pl-10"
-                        placeholder="+33 1 23 45 67 89"
+                      <PhoneInput
+                        international
+                        defaultCountry="FR"
+                        value={phone}
+                        onChange={(value) => {
+                          setPhone(value || '')
+                          setValue('tel', value || '')
+                        }}
+                        className={`
+                          block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm
+                          placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+                          sm:text-sm bg-white text-gray-900
+                          transition duration-150 ease-in-out
+                        `}
+                        style={{
+                          '--PhoneInputCountryFlag-height': '1.2em',
+                          '--PhoneInputCountryFlag-borderColor': 'rgba(0,0,0,0.1)',
+                          '--PhoneInput-color--focus': '#3b82f6',
+                        } as React.CSSProperties}
                       />
                     </div>
+                    <input
+                      {...register('tel', { 
+                        required: 'Le téléphone est requis',
+                        validate: (value) => phone?.length > 5 || 'Numéro de téléphone invalide'
+                      })}
+                      type="hidden"
+                    />
+                    {errors.tel && (
+                      <p className="error-message">{errors.tel.message}</p>
+                    )}
                   </div>
 
                   <div>
@@ -187,7 +215,10 @@ export default function PatientSignup() {
                         <Calendar className="h-5 w-5 text-medical-400" />
                       </div>
                       <input
-                        {...register('date_naissance', { required: 'La date de naissance est requise' ,validate: validateAge})}
+                        {...register('date_naissance', { 
+                          required: 'La date de naissance est requise',
+                          validate: validateAge
+                        })}
                         type="date"
                         className="input-field pl-10"
                         max={new Date().toISOString().split('T')[0]}
@@ -210,7 +241,7 @@ export default function PatientSignup() {
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-medical-700 mb-2">
-                    Maladie/Condition
+                    Maladie/Condition*
                   </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -218,23 +249,22 @@ export default function PatientSignup() {
                     </div>
                     <input
                       {...register('maladie')}
+                      required
                       type="text"
                       className="input-field pl-10"
                       placeholder="Ex: Diabète, Hypertension, Asthme..."
-                      required
                     />
                   </div>
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-medical-700 mb-2">
-                    Description de la condition
+                    Description de la condition*
                   </label>
                   <textarea
                     {...register('description_maladie')}
-                    className="input-field"
+                    className="input-field" required
                     rows={3}
-                    required
                     placeholder="Décrivez votre condition médicale, symptômes, traitements en cours..."
                   />
                 </div>
